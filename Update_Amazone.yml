@@ -1,0 +1,19 @@
+---
+- name: Update all packages to the latest version
+  hosts: mn
+  become: yes  # Ensures tasks run as root
+  tasks:
+    - name: Update all packages
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Check if reboot is required
+      shell: "needs-restarting -r"
+      register: kernel_update_check
+      ignore_errors: yes
+      changed_when: kernel_update_check.rc == 1
+
+    - name: Perform reboot if needed
+      reboot:
+      when: kernel_update_check.rc == 1
